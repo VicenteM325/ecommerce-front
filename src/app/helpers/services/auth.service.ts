@@ -50,26 +50,6 @@ export class AuthService {
     );
   }
 
-  // Redirigir basado en el rol
-  private redirectByRole(roleName: string): void {
-    switch (roleName) {
-      case 'ROLE_ADMIN': 
-        this.router.navigateByUrl('/admin/dashboard'); 
-        break;
-      case 'ROLE_COMMON': 
-        this.router.navigateByUrl('/common/dashboard'); 
-        break;
-      case 'ROLE_LOGISTICS': 
-        this.router.navigateByUrl('/logistics/dashboard'); 
-        break;
-      case 'ROLE_MODERATOR': 
-        this.router.navigateByUrl('/moderator/dashboard'); 
-        break;
-      default: 
-        this.router.navigateByUrl('/login'); 
-        break;
-    }
-  }
 
   // Resto de métodos se mantienen igual...
   private setCurrentUser(user: User | null): void {

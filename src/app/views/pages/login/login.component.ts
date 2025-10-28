@@ -8,7 +8,6 @@ import { IconDirective } from '@coreui/icons-angular';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../helpers/services/auth.service';
 import { LoginUser } from '../../../helpers/models/login-user';
-import { switchMap } from 'rxjs/operators';
 
 import {
   ButtonDirective,
@@ -52,37 +51,56 @@ export class LoginComponent {
   });
 
   login(): void {
-  if (this.loginForm.invalid) return;
-  this.loading = true;
-  this.errorMessage = '';
+    if (this.loginForm.invalid) return;
+    this.loading = true;
+    this.errorMessage = '';
 
-  const credentials: LoginUser = this.loginForm.value as LoginUser;
+    const credentials: LoginUser = this.loginForm.value as LoginUser;
 
-  this.authService.login(credentials).pipe(
-    switchMap((response) => {
-      console.log('Login successful, role:', response.message);
-      return this.authService.getDetails();
-    })
-  ).subscribe({
-    next: (user) => {
-      this.loading = false;
-      console.log('Usuario autenticado:', user);
-      this.redirectByRole(user.role?.name);
-    },
-    error: (err) => {
-      console.error('Error completo:', err);
-      this.loading = false;
-      
-      if (err.status === 0) {
-        this.errorMessage = 'Error de CORS al obtener detalles del usuario';
-      } else {
+    // ✅ SOLUCIÓN SIMPLE - Solo login y redirección forzada
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('Login successful, role:', response.message);
+        
+        // ✅ REDIRECCIÓN FORZADA - Evita todos los problemas de CORS
+        this.forceRedirectByRole(response.message);
+      },
+      error: (err) => {
+        console.error('Error al iniciar sesión:', err);
+        this.loading = false;
         this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
       }
-    }
-  });
-}
+    });
+  }
 
+  private forceRedirectByRole(roleName: string): void {
+    console.log('🔀 Force redirecting to:', roleName);
+
+    switch (roleName) {
+      case 'ROLE_ADMIN': 
+        window.location.href = '/admin/dashboard';
+        break;
+      case 'ROLE_COMMON': 
+        window.location.href = '/common/dashboard';
+        break;
+      case 'ROLE_LOGISTICS': 
+        window.location.href = '/logistics/dashboard';
+        break;
+      case 'ROLE_MODERATOR': 
+        window.location.href = '/moderator/dashboard';
+        break;
+      default: 
+        console.warn('Rol no reconocido:', roleName);
+        this.errorMessage = 'Rol no reconocido';
+        break;
+    }
+  }
+
+  // Mantener este método para restoreSession
   private redirectByRole(roleName: string | undefined): void {
+    if (!roleName) return;
+    
     switch (roleName) {
       case 'ROLE_ADMIN': 
         this.router.navigateByUrl('/admin/dashboard'); 
