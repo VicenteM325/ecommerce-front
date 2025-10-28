@@ -94,16 +94,25 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  // Método mejorado para restaurar sesión
+  // Método para restaurar sesión
   restoreSession(): Observable<User | null> {
-    return this.getDetails().pipe(
-      tap(user => this.setCurrentUser(user)),
-      catchError(error => {
-        this.clearAuth();
-        return of(null);
-      })
-    );
+  const storedUser = this.getStoredUser();
+  if (!storedUser) {
+    // No hay sesión guardada, devolver null sin llamar al backend
+    this.clearAuth();
+    return of(null);
   }
+
+  // Si hay usuario guardado, validar con backend
+  return this.getDetails().pipe(
+    tap(user => this.setCurrentUser(user)),
+    catchError(error => {
+      console.error('No se pudo restaurar sesión:', error);
+      this.clearAuth();
+      return of(null);
+    })
+  );
+}
 
   logout(): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}auth/logout`, {}, { withCredentials: true })
