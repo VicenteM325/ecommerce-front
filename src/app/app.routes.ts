@@ -21,6 +21,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layout').then(m => m.DefaultLayoutComponent),
+    canActivate: [roleGuard],
     children: [
       { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [roleGuard], data: { expectedRole: 'ROLE_ADMIN' } },
       { path: 'admin/users', component: UsersListComponent, canActivate: [roleGuard], data: { expectedRole: 'ROLE_ADMIN' } },
