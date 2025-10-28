@@ -58,8 +58,10 @@ export class LoginComponent {
     const credentials: LoginUser = this.loginForm.value as LoginUser;
 
     this.authService.login(credentials).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading = false;
+        console.log('Login successful, role:', response.message);
+        this.redirectByRole(response.message);
       },
       error: (err) => {
         console.error('Error al iniciar sesión:', err);

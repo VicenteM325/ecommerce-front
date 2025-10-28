@@ -28,13 +28,7 @@ export class AuthService {
   login(loginUser: LoginUser): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}auth/login`, loginUser, {
       withCredentials: true,
-    }).pipe(
-      tap(response => {
-        console.log('Login successful, role:', response.message);
-        // Redirigir inmediatamente basado en el rol
-        this.redirectByRole(response.message);
-      })
-    );
+    })
   }
 
   register(newUser: NewUser): Observable<any> {
