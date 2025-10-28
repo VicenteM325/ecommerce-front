@@ -36,18 +36,12 @@ export class LoginComponent {
   private router = inject(Router);
 
   ngOnInit(): void {
-  this.authService.restoreSession().subscribe(user => {
-    if (user) {
-      const roleName = user.role?.name || '';
-      switch (roleName) {
-        case 'ROLE_ADMIN': this.router.navigateByUrl('/admin/dashboard'); break;
-        case 'ROLE_COMMON': this.router.navigateByUrl('/common/dashboard'); break;
-        case 'ROLE_LOGISTICS': this.router.navigateByUrl('/logistics/dashboard'); break;
-        case 'ROLE_MODERATOR': this.router.navigateByUrl('/moderator/dashboard'); break;
+    this.authService.restoreSession().subscribe(user => {
+      if (user) {
+        this.redirectByRole(user.role?.name);
       }
-    }
-  });
-}
+    });
+  }
 
   loading = false;
   errorMessage = '';
@@ -58,33 +52,53 @@ export class LoginComponent {
   });
 
   login(): void {
-  if (this.loginForm.invalid) return;
-  this.loading = true;
+    if (this.loginForm.invalid) return;
+    this.loading = true;
+    this.errorMessage = '';
 
-  const credentials: LoginUser = this.loginForm.value as LoginUser;
+    const credentials: LoginUser = this.loginForm.value as LoginUser;
 
-  this.authService.login(credentials).pipe(
-    switchMap(() => this.authService.getDetails())
-  ).subscribe({
-    next: (user) => {
-      this.loading = false;
-      console.log('Usuario completo:', user);
-
-      const roleName = user.role?.name || '';
-      switch (roleName) {
-        case 'ROLE_ADMIN': this.router.navigateByUrl('/admin/dashboard'); break;
-        case 'ROLE_COMMON': this.router.navigateByUrl('/common/dashboard'); break;
-        case 'ROLE_LOGISTICS': this.router.navigateByUrl('/logistics/dashboard'); break;
-        case 'ROLE_MODERATOR': this.router.navigateByUrl('/moderator/dashboard'); break;
-        default: this.router.navigateByUrl('/login'); break;
+    this.authService.login(credentials).pipe(
+      // Usar any temporalmente o definir la interfaz correctamente
+      switchMap((loginResponse: any) => {
+        console.log('Login response:', loginResponse);
+        return this.authService.getDetails();
+      })
+    ).subscribe({
+      next: (user) => {
+        this.loading = false;
+        console.log('Usuario autenticado:', user);
+        this.redirectByRole(user.role?.name);
+      },
+      error: (err) => {
+        console.error('Error completo:', err);
+        this.loading = false;
+        this.errorMessage = err?.error?.message || 'Error al iniciar sesión';
+        
+        if (err.status === 0) {
+          this.errorMessage = 'Error de conexión. Verifique CORS.';
+        }
       }
-    },
-    error: (err) => {
-      console.error('Error al iniciar sesión o obtener usuario:', err);
-      this.loading = false;
-      this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
-    }
-  });
-}
+    });
+  }
 
+  private redirectByRole(roleName: string | undefined): void {
+    switch (roleName) {
+      case 'ROLE_ADMIN': 
+        this.router.navigateByUrl('/admin/dashboard'); 
+        break;
+      case 'ROLE_COMMON': 
+        this.router.navigateByUrl('/common/dashboard'); 
+        break;
+      case 'ROLE_LOGISTICS': 
+        this.router.navigateByUrl('/logistics/dashboard'); 
+        break;
+      case 'ROLE_MODERATOR': 
+        this.router.navigateByUrl('/moderator/dashboard'); 
+        break;
+      default: 
+        this.router.navigateByUrl('/login'); 
+        break;
+    }
+  }
 }
