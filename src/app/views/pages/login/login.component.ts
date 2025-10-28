@@ -8,6 +8,7 @@ import { IconDirective } from '@coreui/icons-angular';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../helpers/services/auth.service';
 import { LoginUser } from '../../../helpers/models/login-user';
+import { switchMap } from 'rxjs/operators';
 
 import {
   ButtonDirective,
@@ -51,25 +52,35 @@ export class LoginComponent {
   });
 
   login(): void {
-    if (this.loginForm.invalid) return;
-    this.loading = true;
-    this.errorMessage = '';
+  if (this.loginForm.invalid) return;
+  this.loading = true;
+  this.errorMessage = '';
 
-    const credentials: LoginUser = this.loginForm.value as LoginUser;
+  const credentials: LoginUser = this.loginForm.value as LoginUser;
 
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
-        this.loading = false;
-        console.log('Login successful, role:', response.message);
-        this.redirectByRole(response.message);
-      },
-      error: (err) => {
-        console.error('Error al iniciar sesión:', err);
-        this.loading = false;
+  this.authService.login(credentials).pipe(
+    switchMap((response) => {
+      console.log('Login successful, role:', response.message);
+      return this.authService.getDetails();
+    })
+  ).subscribe({
+    next: (user) => {
+      this.loading = false;
+      console.log('Usuario autenticado:', user);
+      this.redirectByRole(user.role?.name);
+    },
+    error: (err) => {
+      console.error('Error completo:', err);
+      this.loading = false;
+      
+      if (err.status === 0) {
+        this.errorMessage = 'Error de CORS al obtener detalles del usuario';
+      } else {
         this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
       }
-    });
-  }
+    }
+  });
+}
 
   private redirectByRole(roleName: string | undefined): void {
     switch (roleName) {
