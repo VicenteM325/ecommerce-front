@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 interface LoginResponse {
   message: string;
 }
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,13 +24,15 @@ export class AuthService {
 
   currentUser$ = this.currentUserSubject.asObservable();
 
-  //  tipo de retorno del login
+  // rol del login
   login(loginUser: LoginUser): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}auth/login`, loginUser, {
       withCredentials: true,
     }).pipe(
       tap(response => {
         console.log('Login successful, role:', response.message);
+        // Redirigir inmediatamente basado en el rol
+        this.redirectByRole(response.message);
       })
     );
   }
@@ -40,6 +43,7 @@ export class AuthService {
     });
   }
 
+  // Obtener detalles del usuario solo cuando sea necesario
   getDetails(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}auth/user/details`, {
       withCredentials: true,
@@ -52,7 +56,28 @@ export class AuthService {
     );
   }
 
-  // Resto del código igual...
+  // Redirigir basado en el rol
+  private redirectByRole(roleName: string): void {
+    switch (roleName) {
+      case 'ROLE_ADMIN': 
+        this.router.navigateByUrl('/admin/dashboard'); 
+        break;
+      case 'ROLE_COMMON': 
+        this.router.navigateByUrl('/common/dashboard'); 
+        break;
+      case 'ROLE_LOGISTICS': 
+        this.router.navigateByUrl('/logistics/dashboard'); 
+        break;
+      case 'ROLE_MODERATOR': 
+        this.router.navigateByUrl('/moderator/dashboard'); 
+        break;
+      default: 
+        this.router.navigateByUrl('/login'); 
+        break;
+    }
+  }
+
+  // Resto de métodos se mantienen igual...
   private setCurrentUser(user: User | null): void {
     this.currentUserSubject.next(user);
     if (user) {

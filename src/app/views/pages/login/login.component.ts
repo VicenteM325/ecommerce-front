@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { switchMap } from 'rxjs/operators';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { NgStyle } from '@angular/common';
@@ -58,26 +57,14 @@ export class LoginComponent {
 
     const credentials: LoginUser = this.loginForm.value as LoginUser;
 
-    this.authService.login(credentials).pipe(
-      // Usar any temporalmente o definir la interfaz correctamente
-      switchMap((loginResponse: any) => {
-        console.log('Login response:', loginResponse);
-        return this.authService.getDetails();
-      })
-    ).subscribe({
-      next: (user) => {
+    this.authService.login(credentials).subscribe({
+      next: () => {
         this.loading = false;
-        console.log('Usuario autenticado:', user);
-        this.redirectByRole(user.role?.name);
       },
       error: (err) => {
-        console.error('Error completo:', err);
+        console.error('Error al iniciar sesión:', err);
         this.loading = false;
-        this.errorMessage = err?.error?.message || 'Error al iniciar sesión';
-        
-        if (err.status === 0) {
-          this.errorMessage = 'Error de conexión. Verifique CORS.';
-        }
+        this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
       }
     });
   }
@@ -97,7 +84,6 @@ export class LoginComponent {
         this.router.navigateByUrl('/moderator/dashboard'); 
         break;
       default: 
-        this.router.navigateByUrl('/login'); 
         break;
     }
   }
