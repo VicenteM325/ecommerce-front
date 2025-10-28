@@ -1,13 +1,11 @@
-import { Injectable, inject, APP_INITIALIZER } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { LoginUser } from '../models/login-user';
 import { HttpClient } from '@angular/common/http';
 import { NewUser } from '../models/new-user';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map, catchError, of } from 'rxjs';
 import { User } from '../models/user';
-import { catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
-
 
 @Injectable({
   providedIn: 'root'
@@ -15,12 +13,43 @@ import { Router } from '@angular/router';
 export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   private router = inject(Router);
 
-
+  // Iniciar la sesion
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private isInitialized = false;
 
   currentUser$ = this.currentUserSubject.asObservable();
+
+  // Método para inicializar la autenticación de forma controlada
+  initializeAuth(): Observable<boolean> {
+    if (this.isInitialized) {
+      return of(!!this.currentUserSubject.value);
+    }
+
+    const storedUser = this.getStoredUser();
+    
+    if (!storedUser) {
+      this.isInitialized = true;
+      return of(false);
+    }
+
+    // Si hay usuario en localStorage, validar con el backend
+    return this.getDetails().pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        this.isInitialized = true;
+      }),
+      map(() => true),
+      catchError(error => {
+        console.error('Session validation failed:', error);
+        // Si hay error (como CORS), limpiar la sesión inválida
+        this.clearAuth();
+        this.isInitialized = true;
+        return of(false);
+      })
+    );
+  }
 
   login(loginUser: LoginUser): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}auth/login`, loginUser, {
@@ -28,6 +57,7 @@ export class AuthService {
     }).pipe(
       tap(user => {
         this.setCurrentUser(user);
+        this.isInitialized = true;
       })
     );
   }
@@ -42,7 +72,8 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}auth/user/details`, {
       withCredentials: true,
     }).pipe(
-      tap(user => this.currentUserSubject.next(user)));
+      tap(user => this.currentUserSubject.next(user))
+    );
   }
 
   private setCurrentUser(user: User | null): void {
@@ -63,20 +94,35 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  // Método mejorado para restaurar sesión
   restoreSession(): Observable<User | null> {
-  return this.getDetails().pipe(
-    catchError(() => of(null))
-  );
-}
-
+    return this.getDetails().pipe(
+      tap(user => this.setCurrentUser(user)),
+      catchError(error => {
+        this.clearAuth();
+        return of(null);
+      })
+    );
+  }
 
   logout(): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}auth/logout`, {}, { withCredentials: true })
       .pipe(
         tap(() => {
-          this.currentUserSubject.next(null);
-          localStorage.removeItem('user');
+          this.clearAuth();
         })
       );
+  }
+
+  // Limpiar autenticación
+  private clearAuth(): void {
+    this.currentUserSubject.next(null);
+    localStorage.removeItem('user');
+    this.isInitialized = true;
+  }
+
+  // Verificar si ya está inicializado
+  getIsInitialized(): boolean {
+    return this.isInitialized;
   }
 }
