@@ -1,0 +1,76 @@
+<div class="card mx-auto mt-5" style="max-width: 600px;">
+  <div class="card-header bg-primary text-white">
+    Crear Nuevo Producto
+  </div>
+  <div *ngIf="serverMessage" class="alert alert-info mb-3" role="alert">
+    {{ serverMessage }}
+  </div>
+  <div class="card-body">
+    <form (ngSubmit)="submit()" #productForm="ngForm" novalidate>
+
+      <!-- Nombre -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Nombre</label>
+        <input type="text" id="name" class="form-control" required [(ngModel)]="newProduct.name" name="name"
+          #name="ngModel">
+        <div class="text-danger" *ngIf="name.invalid && name.touched">El nombre es obligatorio</div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea id="description" class="form-control" required [(ngModel)]="newProduct.description" name="description"
+          #description="ngModel"></textarea>
+        <div class="text-danger" *ngIf="description.invalid && description.touched">La descripción es obligatoria</div>
+      </div>
+
+      <!-- Imagen -->
+      <div class="mb-3">
+        <label for="picture" class="form-label">URL de Imagen</label>
+        <input type="url" id="picture" class="form-control" required [(ngModel)]="newProduct.picture" name="picture"
+          #picture="ngModel">
+        <div class="text-danger" *ngIf="picture.invalid && picture.touched">La URL de la imagen es obligatoria</div>
+      </div>
+
+      <!-- Precio -->
+      <div class="mb-3">
+        <label for="price" class="form-label">Precio</label>
+        <input type="number" id="price" class="form-control" required min="0" [(ngModel)]="newProduct.price"
+          name="price" #price="ngModel">
+        <div class="text-danger" *ngIf="price.invalid && price.touched">El precio debe ser mayor o igual a 0</div>
+      </div>
+
+      <!-- Stock -->
+      <div class="mb-3">
+        <label for="stock" class="form-label">Stock</label>
+        <input type="number" id="stock" class="form-control" required min="0" [(ngModel)]="newProduct.stock"
+          name="stock" #stock="ngModel">
+        <div class="text-danger" *ngIf="stock.invalid && stock.touched">El stock debe ser mayor o igual a 0</div>
+      </div>
+
+      <!-- Categoría -->
+      <div class="mb-3">
+        <label for="categoryId" class="form-label">Categoría</label>
+        <select id="categoryId" class="form-select" required [(ngModel)]="newProduct.categoryId" name="categoryId"
+          #categoryId="ngModel">
+          <option [ngValue]="null" disabled>-- Selecciona una categoría --</option>
+          <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
+        </select>
+        <div class="text-danger" *ngIf="categoryId.invalid && categoryId.touched">Selecciona una categoría</div>
+      </div>
+
+      <!-- Estado -->
+      <div class="mb-3">
+        <label for="stateId" class="form-label">Estado</label>
+        <select id="stateId" class="form-select" required [(ngModel)]="newProduct.stateId" name="stateId"
+          #stateId="ngModel">
+          <option [ngValue]="null" disabled>-- Selecciona un estado --</option>
+          <option *ngFor="let s of states" [ngValue]="s.id">{{ s.name }}</option>
+        </select>
+        <div class="text-danger" *ngIf="stateId.invalid && stateId.touched">Selecciona un estado</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100" [disabled]="productForm.invalid">Crear Producto</button>
+    </form>
+  </div>
+</div>

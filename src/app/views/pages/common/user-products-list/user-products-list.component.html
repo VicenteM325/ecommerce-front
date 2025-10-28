@@ -1,0 +1,42 @@
+<div class="container mt-5">
+  <h4 class="mb-4 text-center">Mis Productos</h4>
+
+  <div *ngIf="userProducts.length === 0" class="alert alert-info text-center">
+    Aún no has creado ningún producto.
+  </div>
+
+  <div class="row" *ngIf="userProducts.length > 0">
+    <div class="col-md-4 mb-4" *ngFor="let p of userProducts">
+      <div class="card shadow-sm h-100">
+        <img 
+          [src]="p.productPicture || 'assets/img/no-image.png'" 
+          class="card-img-top" 
+          alt="{{ p.productName }}" 
+          style="height: 200px; object-fit: cover;"
+        >
+        <div class="card-body">
+          <h5 class="card-title">{{ p.productName }}</h5>
+          <p class="card-text">{{ p.productDescription }}</p>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-primary">{{ p.categoryName || 'Sin categoría' }}</span>
+            <span 
+              class="badge"
+              [ngClass]="{
+                'bg-warning text-dark': p.state === 'PENDIENTE',
+                'bg-success': p.state === 'ACEPTADO',
+                'bg-danger': p.state === 'RECHAZADO'
+              }"
+            >
+              {{ p.state }}
+            </span>
+          </div>
+
+          <p *ngIf="p.moderationComment" class="mt-2 text-muted small">
+            <strong>Comentario:</strong> {{ p.moderationComment }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

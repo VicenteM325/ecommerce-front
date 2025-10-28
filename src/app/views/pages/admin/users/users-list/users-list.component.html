@@ -1,0 +1,42 @@
+<div *ngIf="!showForm">
+  <h2>Gestión de Usuarios</h2>
+
+  <button (click)="newUser()" class="btn btn-success mb-3">+ Crear usuario</button>
+
+  <table *ngIf="!loading" class="table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Dirección</th>
+        <th>DPI</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>{{ user.name }}</td>
+        <td>{{ user.emailAddress }}</td>
+        <td>{{ user.role?.name }}</td>
+        <td>{{ user.address }}</td>
+        <td>{{ user.dpi }}</td>
+        <td>
+          <button (click)="editUser(user)" class="btn btn-primary btn-sm">Editar</button>
+          <button (click)="deleteUser(user.userId!)" class="btn btn-danger btn-sm">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="loading">Cargando usuarios...</p>
+  <p *ngIf="error">{{ error }}</p>
+</div>
+
+<div *ngIf="showForm">
+  <app-user-form
+    [user]="selectedUser"
+    (formSaved)="reloadAfterSave()"
+    (formCancelled)="closeForm()"
+  ></app-user-form>
+</div>

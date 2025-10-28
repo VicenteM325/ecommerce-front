@@ -1,0 +1,93 @@
+<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
+  <c-container>
+    <c-row class="justify-content-center">
+      <c-col lg="7" md="9" xl="6">
+        <c-card class="mx-4">
+          <c-card-body class="p-4">
+            <form [formGroup]="registerForm" (ngSubmit)="register()">
+              <h1>Registro</h1>
+              <p class="text-body-secondary">Crea tu cuenta</p>
+
+              <c-input-group class="mb-3">
+                <span cInputGroupText>
+                  <svg cIcon name="cilUser"></svg>
+                </span>
+                <input
+                  cFormControl
+                  placeholder="Nombre"
+                  formControlName="name"
+                  type="text"
+                />
+              </c-input-group>
+
+              <c-input-group class="mb-3">
+                <span cInputGroupText>@</span>
+                <input
+                  cFormControl
+                  placeholder="Correo electrónico"
+                  type="email"
+                  formControlName="emailAddress"
+                />
+              </c-input-group>
+
+              <c-input-group class="mb-3">
+                <span cInputGroupText>
+                  <svg cIcon name="cilLockLocked"></svg>
+                </span>
+                <input
+                  cFormControl
+                  placeholder="Contraseña"
+                  type="password"
+                  formControlName="password"
+                />
+              </c-input-group>
+
+              <c-input-group class="mb-3">
+                <span cInputGroupText>
+                  <svg cIcon name="cilHome"></svg>
+                </span>
+                <input
+                  cFormControl
+                  placeholder="Dirección"
+                  type="text"
+                  formControlName="address"
+                />
+              </c-input-group>
+
+              <c-input-group class="mb-3">
+                <span cInputGroupText>
+                  <svg cIcon name="cilContact"></svg>
+                </span>
+                <input
+                  cFormControl
+                  placeholder="DPI"
+                  type="text"
+                  maxlength="13"
+                  formControlName="dpi"
+                />
+              </c-input-group>
+
+              <div class="d-grid mb-3">
+                <button
+                  cButton
+                  color="success"
+                  [disabled]="registerForm.invalid || loading"
+                  type="submit"
+                >
+                  {{ loading ? 'Registrando...' : 'Crear cuenta' }}
+                </button>
+              </div>
+
+              <div *ngIf="errorMessage" class="text-danger mb-3">{{ errorMessage }}</div>
+
+              <p class="text-center text-muted">
+                ¿Ya tienes cuenta?
+                <a [routerLink]="['/login']">Inicia sesión</a>
+              </p>
+            </form>
+          </c-card-body>
+        </c-card>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>

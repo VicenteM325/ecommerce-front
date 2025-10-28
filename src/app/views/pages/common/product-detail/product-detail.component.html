@@ -1,0 +1,35 @@
+<div class="container mt-5" *ngIf="product$ | async as product; else loading">
+  <c-card class="shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeIn">
+    <div class="text-center p-4">
+      <c-avatar size="8xl" [src]="product.picture" [alt]="product.name" class="mb-3"></c-avatar>
+
+      <h3 class="fw-bold">{{ product.name }}</h3>
+      <p class="text-muted">{{ product.description }}</p>
+
+      <p><strong>Categoría:</strong> {{ product.categoryName }}</p>
+      <p><strong>Estado:</strong>
+        <c-badge [color]="product.state === 'Nuevo' ? 'success' : 'secondary'">
+          {{ product.state }}
+        </c-badge>
+      </p>
+      <p><strong>Precio:</strong> Q{{ product.price }}</p>
+      <p><strong>Stock:</strong> {{ product.stock }}</p>
+
+      <div class="mt-3 d-flex justify-content-center gap-2">
+        <button cButton color="primary" class="px-4 rounded-pill" (click)="addToCart(product)">
+          Agregar al carrito
+        </button>
+        <button cButton color="secondary" class="px-4 rounded-pill" routerLink="/common/dashboard">
+          Volver
+        </button>
+      </div>
+    </div>
+  </c-card>
+</div>
+
+<ng-template #loading>
+  <div class="text-center mt-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 text-muted">Loading product details...</p>
+  </div>
+</ng-template>

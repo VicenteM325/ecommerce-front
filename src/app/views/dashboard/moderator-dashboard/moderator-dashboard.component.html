@@ -1,0 +1,42 @@
+<div *ngIf="serverMessage" class="alert alert-info" role="alert" style="margin-bottom: 1rem;">
+    {{ serverMessage }}
+</div>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Nombre Producto</th>
+            <th>Usuario</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of pendingList">
+            <td>{{ item.productName }}</td>
+            <td>{{ item.userName }}</td>
+            <td>
+                <button cButton color="success" (click)="approve(item)">Aprobar</button>
+                <button cButton color="danger" variant="outline"
+                    (click)="openRejectModal(item, 'rejectModal')">Rechazar</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Modal de rechazo -->
+<c-modal [(visible)]="modalsVisibility['rejectModal']" id="rejectModal" alignment="center" size="lg">
+    <c-modal-header>
+        <h5 cModalTitle>Rechazar Publicación</h5>
+        <button cButtonClose (click)="closeRejectModal('rejectModal')"></button>
+    </c-modal-header>
+
+    <c-modal-body>
+        <form [formGroup]="rejectForm">
+            <input type="text" class="form-control" formControlName="comment" placeholder="Motivo del rechazo">
+        </form>
+    </c-modal-body>
+
+    <c-modal-footer>
+        <button cButton color="secondary" variant="outline" (click)="closeRejectModal('rejectModal')">Cancelar</button>
+        <button cButton color="danger" (click)="reject('rejectModal')">Rechazar</button>
+    </c-modal-footer>
+</c-modal>
