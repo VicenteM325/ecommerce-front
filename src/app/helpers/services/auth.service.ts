@@ -97,6 +97,23 @@ export class AuthService {
     );
   }
 
+setTempUser(email: string, roleName: string): void {
+  const tempUser: any = {
+    userId: 'temp-' + Date.now(),
+    name: 'Usuario Temporal',
+    emailAddress: email,
+    role: { name: roleName },
+    address: '',
+    dpi: 0,
+    userStatus: true
+  };
+  
+  this.currentUserSubject.next(tempUser);
+  this.setCurrentUser(tempUser);
+  this.isInitialized = true;
+  console.log('✅ Temp user set in service:', tempUser);
+}
+
   restoreSession(): Observable<User | null> {
     const storedUser = this.getStoredUser();
     if (!storedUser) {

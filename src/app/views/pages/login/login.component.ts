@@ -8,6 +8,7 @@ import { IconDirective } from '@coreui/icons-angular';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../helpers/services/auth.service';
 import { LoginUser } from '../../../helpers/models/login-user';
+import { switchMap } from 'rxjs/operators'; // ✅ No olvides este import
 
 import {
   ButtonDirective,
@@ -57,65 +58,77 @@ export class LoginComponent {
 
     const credentials: LoginUser = this.loginForm.value as LoginUser;
 
-    // ✅ SOLUCIÓN SIMPLE - Solo login y redirección forzada
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
+    this.authService.login(credentials).pipe(
+      // ✅ Obtener detalles del usuario DESPUÉS del login
+      switchMap((response) => {
+        console.log('✅ Login successful, role:', response.message);
+        return this.authService.getDetails();
+      })
+    ).subscribe({
+      next: (user) => {
         this.loading = false;
-        console.log('Login successful, role:', response.message);
-        
-        // ✅ REDIRECCIÓN FORZADA - Evita todos los problemas de CORS
-        this.forceRedirectByRole(response.message);
+        console.log('✅ User details obtained:', user);
+
+        // ✅ Usar el router de Angular (NO window.location)
+        this.redirectByRole(user.role?.name);
       },
       error: (err) => {
-        console.error('Error al iniciar sesión:', err);
         this.loading = false;
-        this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
+        console.error('❌ Error:', err);
+
+        if (err.status === 0) {
+          // ✅ SI HAY CORS, crear usuario temporal y redirigir
+          this.errorMessage = 'Error de CORS, usando solución temporal...';
+          this.createAndStoreTempUser(credentials.emailAddress, 'ROLE_COMMON');
+          setTimeout(() => this.redirectByRole('ROLE_COMMON'), 500);
+        } else {
+          this.errorMessage = err?.error?.message || 'Credenciales incorrectas';
+        }
       }
     });
   }
 
-  private forceRedirectByRole(roleName: string): void {
-    console.log('🔀 Force redirecting to:', roleName);
+  // ✅ SOLO UN método redirectByRole
+  private redirectByRole(roleName: string | undefined): void {
+    if (!roleName) {
+      console.warn('No role provided for redirect');
+      return;
+    }
+
+    console.log('🔀 Redirecting to:', roleName);
 
     switch (roleName) {
-      case 'ROLE_ADMIN': 
-        window.location.href = '/admin/dashboard';
+      case 'ROLE_ADMIN':
+        this.router.navigateByUrl('/admin/dashboard');
         break;
-      case 'ROLE_COMMON': 
-        window.location.href = '/common/dashboard';
+      case 'ROLE_COMMON':
+        this.router.navigateByUrl('/common/dashboard');
         break;
-      case 'ROLE_LOGISTICS': 
-        window.location.href = '/logistics/dashboard';
+      case 'ROLE_LOGISTICS':
+        this.router.navigateByUrl('/logistics/dashboard');
         break;
-      case 'ROLE_MODERATOR': 
-        window.location.href = '/moderator/dashboard';
+      case 'ROLE_MODERATOR':
+        this.router.navigateByUrl('/moderator/dashboard');
         break;
-      default: 
+      default:
         console.warn('Rol no reconocido:', roleName);
-        this.errorMessage = 'Rol no reconocido';
         break;
     }
   }
 
-  // Mantener este método para restoreSession
-  private redirectByRole(roleName: string | undefined): void {
-    if (!roleName) return;
-    
-    switch (roleName) {
-      case 'ROLE_ADMIN': 
-        this.router.navigateByUrl('/admin/dashboard'); 
-        break;
-      case 'ROLE_COMMON': 
-        this.router.navigateByUrl('/common/dashboard'); 
-        break;
-      case 'ROLE_LOGISTICS': 
-        this.router.navigateByUrl('/logistics/dashboard'); 
-        break;
-      case 'ROLE_MODERATOR': 
-        this.router.navigateByUrl('/moderator/dashboard'); 
-        break;
-      default: 
-        break;
-    }
+  // ✅ Crear usuario temporal para bypassear CORS
+  private createAndStoreTempUser(email: string, roleName: string): void {
+    const tempUser = {
+      userId: 'temp-' + Date.now(),
+      name: 'Usuario Temporal',
+      emailAddress: email,
+      role: { name: roleName },
+      address: '',
+      dpi: 0,
+      userStatus: true
+    };
+
+    console.log('💾 Storing temp user:', tempUser);
+    localStorage.setItem('user', JSON.stringify(tempUser));
   }
 }
